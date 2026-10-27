@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large raw datasets (Exceeds GitHub 100MB limit)
+data/creditcard.csv
+*.zip
+*.tar.gz
+
+# Environments & OS files
+venv/
+env/
+.env
+.DS_Store
+Thumbs.db

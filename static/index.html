@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisPay // Real-Time Fraud & Anomaly Detection System</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center;">
+          <h1 class="brand-title">AegisPay</h1>
+          <span class="brand-tag">Anomaly Engine v2.0</span>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: -2px;">Credit Card Fraud Detection • Semester-5 AI Mini Project</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="inspectorTab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
+        Live Inspector
+      </button>
+      <button class="tab-btn" data-tab="batchTab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Batch Scanner
+      </button>
+      <button class="tab-btn" data-tab="benchmarksTab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Model Benchmarks
+      </button>
+    </div>
+
+    <div class="nav-stats">
+      <div class="stat-pill">
+        <span class="pulse-dot"></span>
+        <span>Isolation Forest: <strong>Active</strong></span>
+      </div>
+      <div class="stat-pill">
+        <span>Latency: <strong style="color: var(--accent-cyan);">0.005 ms</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="container">
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: LIVE TRANSACTION INSPECTOR                        -->
+    <!-- ======================================================== -->
+    <section id="inspectorTab" class="tab-content active">
+      
+      <!-- Curated Presets Bar -->
+      <div class="presets-section">
+        <div class="section-label">
+          <span>⚡ 1-Click Kaggle Benchmark Test Cases</span>
+          <span style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Click any card to auto-populate features</span>
+        </div>
+        <div class="preset-chips-grid" id="presetChips">
+          <!-- Dynamically populated via loadSamples() -->
+          <div style="color:var(--text-dim); font-size:0.85rem;">Loading curated transaction profiles...</div>
+        </div>
+      </div>
+
+      <!-- Inspector Grid -->
+      <div class="inspector-grid">
+        
+        <!-- Left: Input Controls -->
+        <div class="glass-panel controls-card">
+          <div class="section-label">Transaction Parameters</div>
+
+          <div class="input-row">
+            <div class="form-group">
+              <label for="amountInput">
+                <span>Amount ($ USD)</span>
+                <span class="label-val" id="amountSliderVal">$33.00</span>
+              </label>
+              <input type="number" id="amountInput" class="text-input" value="33.00" step="0.5">
+            </div>
+
+            <div class="form-group">
+              <label>Amount Quick Adjust</label>
+              <input type="range" id="amountSlider" class="slider-input" min="0" max="2500" step="5" value="33" style="margin-top: 14px;">
+            </div>
+          </div>
+
+          <!-- Key Latent Driver Sliders -->
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin: 1rem 0 0.5rem 0;">
+            Primary Latent Anomaly Drivers (PCA)
+          </div>
+
+          <div class="form-group">
+            <label for="v14Slider">
+              <span>Feature V14 (Top Fraud Correlator)</span>
+              <span class="label-val" id="v14Val">-0.08</span>
+            </label>
+            <input type="range" id="v14Slider" class="slider-input" min="-18" max="10" step="0.1" value="-0.08">
+          </div>
+
+          <div class="form-group">
+            <label for="v12Slider">
+              <span>Feature V12 (Compromised Card Indicator)</span>
+              <span class="label-val" id="v12Val">0.78</span>
+            </label>
+            <input type="range" id="v12Slider" class="slider-input" min="-18" max="8" step="0.1" value="0.78">
+          </div>
+
+          <div class="form-group">
+            <label for="v10Slider">
+              <span>Feature V10 (Account Behavior Divergence)</span>
+              <span class="label-val" id="v10Val">-0.34</span>
+            </label>
+            <input type="range" id="v10Slider" class="slider-input" min="-24" max="15" step="0.1" value="-0.34">
+          </div>
+
+          <div class="form-group">
+            <label for="v17Slider">
+              <span>Feature V17 (Velocity & Pattern Anomaly)</span>
+              <span class="label-val" id="v17Val">0.77</span>
+            </label>
+            <input type="range" id="v17Slider" class="slider-input" min="-25" max="9" step="0.1" value="0.77">
+          </div>
+
+          <!-- Advanced Collapsible PCA Grid -->
+          <div class="pca-accordion">
+            <button type="button" class="accordion-trigger" id="togglePcaBtn">
+              Show All 28 PCA Features (V1 - V28) ▼
+            </button>
+            <div class="pca-grid" id="pcaGrid">
+              <!-- Dynamically populated V1 - V28 mini inputs -->
+            </div>
+          </div>
+
+          <button id="analyzeBtn" class="btn-primary">
+            <span>⚡ Analyze Transaction In Real-Time</span>
+          </button>
+        </div>
+
+        <!-- Right: Results & Gauge Panel -->
+        <div class="glass-panel results-card">
+          <div class="section-label">Real-Time Risk Assessment</div>
+
+          <!-- Circular Risk Gauge -->
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <circle class="gauge-bg" cx="100" cy="100" r="90" />
+              <circle id="riskGaugeFill" class="gauge-fill" cx="100" cy="100" r="90" />
+            </svg>
+            <div class="gauge-center-text">
+              <div class="risk-num" id="riskNum">0.0%</div>
+              <div class="risk-label" id="riskLabel">LOW RISK</div>
+            </div>
+          </div>
+
+          <!-- Status Banner -->
+          <div class="status-banner" id="statusBanner">
+            <span class="status-badge" id="statusBadge">LEGITIMATE</span>
+            <span class="status-desc" id="statusDesc">Consistent with cardholder behavioral profile.</span>
+          </div>
+
+          <!-- Dual Engine Comparison -->
+          <div class="dual-engine-grid">
+            <div class="engine-box">
+              <div class="engine-header">Isolation Forest Anomaly</div>
+              <div class="engine-val" id="anomalyScoreVal">0.0%</div>
+              <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 2px;">Unsupervised Outlier Score</div>
+            </div>
+            <div class="engine-box">
+              <div class="engine-header">Supervised Fraud Prob</div>
+              <div class="engine-val" id="supervisedProbVal" style="color: var(--accent-indigo);">0.0%</div>
+              <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 2px;">Random Forest Classifier</div>
+            </div>
+          </div>
+
+          <!-- Feature Explainability Attribution -->
+          <div class="drivers-card">
+            <div class="section-label" style="margin-bottom: 0.4rem;">
+              <span>Explainability: Top Anomaly Contributors</span>
+              <span style="font-size: 0.7rem; color: var(--text-dim);">Z-Score vs Normal μ</span>
+            </div>
+            <div id="driversList">
+              <!-- Dynamically populated explainability items -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: BATCH CSV SCANNER                                 -->
+    <!-- ======================================================== -->
+    <section id="batchTab" class="tab-content">
+      <div class="glass-panel" style="padding: 2.5rem;">
+        <div class="section-label">Batch Transaction Audit Engine</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Upload a CSV file containing transactions to audit hundreds or thousands of transactions in parallel. The engine runs vectorized Isolation Forest inference and generates an audit log.
+        </p>
+
+        <!-- Dropzone -->
+        <input type="file" id="batchFileInput" accept=".csv" style="display: none;">
+        <div class="dropzone-box" id="dropzone">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
+          <div style="font-weight: 700; font-size: 1.15rem; color: #fff;">Drag & Drop CSV File to Audit</div>
+          <div style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.35rem;">
+            Click to browse (supports Kaggle creditcard.csv or any test batch)
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="batchResultsSection" style="display: none;">
+          <div class="batch-stats-grid">
+            <div class="glass-panel batch-stat-card">
+              <div class="section-label" style="justify-content: center;">Total Audited</div>
+              <div class="batch-stat-num" id="bTotal">0</div>
+            </div>
+            <div class="glass-panel batch-stat-card">
+              <div class="section-label" style="justify-content: center; color: var(--status-danger);">Flagged Frauds</div>
+              <div class="batch-stat-num" id="bFraud" style="color: var(--status-danger);">0</div>
+            </div>
+            <div class="glass-panel batch-stat-card">
+              <div class="section-label" style="justify-content: center; color: var(--status-warn);">Suspicious / Review</div>
+              <div class="batch-stat-num" id="bSuspicious" style="color: var(--status-warn);">0</div>
+            </div>
+            <div class="glass-panel batch-stat-card">
+              <div class="section-label" style="justify-content: center; color: var(--status-safe);">Fraud Loss Prevented</div>
+              <div class="batch-stat-num" id="bSaved" style="color: var(--status-safe);">$0</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+            <div class="section-label">Flagged High-Risk Transactions (Preview)</div>
+            <button id="exportBatchBtn" class="btn-primary" style="width: auto; padding: 0.5rem 1.25rem; font-size: 0.85rem; margin: 0; display: none;">
+              📥 Download Audited CSV Report
+            </button>
+          </div>
+
+          <div class="data-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Amount</th>
+                  <th>Anomaly Score</th>
+                  <th>Supervised Prob</th>
+                  <th>Composite Risk</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="batchPreviewTbody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: MODEL BENCHMARKS & EVALUATION                     -->
+    <!-- ======================================================== -->
+    <section id="benchmarksTab" class="tab-content">
+      <div class="section-label" style="margin-bottom: 1.25rem;">
+        <span>Model Evaluation & Benchmark Comparison (56,962 Holdout Test Set)</span>
+      </div>
+
+      <div class="models-compare-grid">
+        
+        <!-- Isolation Forest Card -->
+        <div class="glass-panel" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--accent-cyan);">Isolation Forest</h2>
+              <span style="font-size: 0.75rem; color: var(--text-dim);">Primary Anomaly Detector • Unsupervised</span>
+            </div>
+            <span class="badge-pill" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">Tree Partitioning</span>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>ROC-AUC Score</span>
+              <strong id="ifRocAuc">0.9546</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 95.46%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>PR-AUC (Average Precision)</span>
+              <strong id="ifPrAuc">0.1475</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 15%; background: var(--accent-cyan);"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>Fraud Recall Rate</span>
+              <strong id="ifRecall">25.5%</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 25.5%; background: var(--status-warn);"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>Inference Latency</span>
+              <strong id="ifLatency" style="color: var(--status-safe);">0.005 ms</strong>
+            </div>
+          </div>
+
+          <!-- Confusion Matrix -->
+          <div style="margin-top: 1.5rem;">
+            <div class="section-label">Confusion Matrix (Holdout Test)</div>
+            <div class="cm-grid">
+              <div class="cm-cell">
+                <div class="cm-title">True Negatives (Safe)</div>
+                <div class="cm-count" id="ifTN" style="color: var(--status-safe);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">False Positives (False Alerts)</div>
+                <div class="cm-count" id="ifFP" style="color: var(--status-warn);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">False Negatives (Missed)</div>
+                <div class="cm-count" id="ifFN" style="color: var(--status-danger);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">True Positives (Caught)</div>
+                <div class="cm-count" id="ifTP" style="color: var(--status-safe);">--</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Supervised Random Forest Card -->
+        <div class="glass-panel" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--accent-indigo);">Random Forest</h2>
+              <span style="font-size: 0.75rem; color: var(--text-dim);">Supervised Comparative Baseline • Balanced Depth 10</span>
+            </div>
+            <span class="badge-pill" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">Supervised Ensemble</span>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>ROC-AUC Score</span>
+              <strong id="rfRocAuc">0.9798</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 97.98%; background: var(--accent-indigo);"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>PR-AUC (Average Precision)</span>
+              <strong id="rfPrAuc">0.8321</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 83.21%; background: var(--accent-indigo);"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>Fraud Recall Rate</span>
+              <strong id="rfRecall">85.7%</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-progress" style="width: 85.7%; background: var(--status-safe);"></div>
+            </div>
+          </div>
+
+          <div class="metric-bar-group">
+            <div class="metric-bar-label">
+              <span>Inference Latency</span>
+              <strong id="rfLatency" style="color: var(--status-safe);">0.003 ms</strong>
+            </div>
+          </div>
+
+          <!-- Confusion Matrix -->
+          <div style="margin-top: 1.5rem;">
+            <div class="section-label">Confusion Matrix (Holdout Test)</div>
+            <div class="cm-grid">
+              <div class="cm-cell">
+                <div class="cm-title">True Negatives (Safe)</div>
+                <div class="cm-count" id="rfTN" style="color: var(--status-safe);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">False Positives (False Alerts)</div>
+                <div class="cm-count" id="rfFP" style="color: var(--status-warn);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">False Negatives (Missed)</div>
+                <div class="cm-count" id="rfFN" style="color: var(--status-danger);">--</div>
+              </div>
+              <div class="cm-cell">
+                <div class="cm-title">True Positives (Caught)</div>
+                <div class="cm-count" id="rfTP" style="color: var(--status-safe);">--</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Academic & Viva Insight Box -->
+      <div class="viva-box">
+        <div class="viva-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Academic Viva Insight: Why use Anomaly Detection if Supervised RF has higher raw F1?
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">
+          In real-world payment processing, fraud is an <strong>adversarial moving target</strong>. Supervised models only detect patterns they have seen in training data, meaning they completely miss <strong>zero-day attacks</strong> and novel fraud techniques. In contrast, <strong>Isolation Forest</strong> isolates anomalies purely based on statistical divergence from legitimate transactions ($V_{14}, V_{12}$ drop, unusual spending velocity), requiring <em>no prior fraud labels</em> and protecting the payment network against brand new exploits.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
