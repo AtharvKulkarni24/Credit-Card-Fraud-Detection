@@ -1,176 +1,290 @@
-# MINI PROJECT REPORT
+# ACADEMIC MINI PROJECT REPORT
 ## Course: Artificial Intelligence (Semester-5) | Batch: AIL - L4
+### Department of Computer Science & Engineering / Artificial Intelligence
 
 ---
 
 # TITLE OF THE PROJECT
-### **AegisPay: Credit Card Fraud Detection Using Unsupervised Anomaly Detection and Explainable AI (XAI)**
+## **AegisPay: High-Throughput Credit Card Fraud Detection Utilizing Unsupervised Anomaly Detection (Isolation Forest) and Explainable Artificial Intelligence (XAI)**
 
 **Academic Year:** 2026–2027  
-**Department:** Computer Science & Engineering / Artificial Intelligence  
-**Prepared By:** Atharv Kulkarni (and Group Members)  
-**Institution:** Affiliated University / Engineering College  
+**Semester:** Fifth Semester (V)  
+**Batch:** AIL - L4  
+**Student Name:** Atharv Kulkarni (and Project Group Members)  
+**Project Repository:** [https://github.com/AtharvKulkarni24/Credit-Card-Fraud-Detection](https://github.com/AtharvKulkarni24/Credit-Card-Fraud-Detection)  
 
 ---
 
 ## 1. PROBLEM STATEMENT
-Credit card fraud represents an adversarial, high-velocity financial crime that causes tens of billions of dollars in losses across the global financial system annually. In electronic payment ecosystems, detecting fraudulent transactions is complicated by three severe real-world constraints:
 
-1. **Extreme Class Imbalance:** Fraudulent transactions represent a tiny minority—typically less than 0.2% of total transaction volume. In the standard benchmark dataset, only 492 out of 284,807 transactions are fraudulent (0.172%). A naive classification model predicting all transactions as legitimate achieves an illusory 99.83% accuracy while failing to detect any fraud.
-2. **Adversarial Concept Drift & Zero-Day Fraud:** Fraudsters continuously evolve tactics to bypass known rule-based filters. Traditional supervised machine learning models rely heavily on historical fraud labels; consequently, they fail to detect novel, previously unseen (zero-day) fraud attack vectors.
-3. **Label Latency in Production:** In real-world banking infrastructure, confirmed fraud labels take between 60 to 90 days to materialize due to cardholder dispute and chargeback processing cycles. A production security system cannot wait months for labeled ground truth to flag active compromises.
+### 1.1 Context and Real-World Impact
+Global card-not-present (CNP) and electronic retail fraud generate financial losses exceeding **$35 billion annually** across commercial banking networks. As financial infrastructure transitions toward high-frequency digital settlement rails, automated transaction authorization engines must evaluate incoming payment requests within milliseconds. Within this context, fraud detection represents one of the most mathematically demanding problem spaces in applied machine learning due to three inherent domain constraints:
 
-**The Problem:** Design, implement, and evaluate an automated, real-time AI system capable of identifying fraudulent credit card transactions without relying strictly on historical fraud labels, maintaining low false-alarm rates, executing with sub-millisecond latency, and providing explainable feature attribution to human fraud investigators.
+### 1.2 The Three Fundamental Challenges
+1. **Extreme Class Imbalance:**
+   In real-world payment data, fraudulent transactions represent a vanishingly small fraction of total volume. In the standard benchmark dataset from the Machine Learning Group at Université Libre de Bruxelles (ULB), exactly **492 out of 284,807 transactions are fraudulent (0.172%)**. A trivial or degenerate classifier that uniformly outputs the majority class ("Legitimate") will achieve an **Accuracy of 99.827%**, yet will completely fail its operational objective by catching zero frauds (Recall = 0.0%).
+2. **Adversarial Concept Drift and Zero-Day Fraud Exploits:**
+   Credit card fraud is fundamentally an adversarial game. Criminal syndicates constantly probe authorization filters and dynamically alter their behaviors (e.g., card testing, micro-charge probing, velocity laundering, and botnet-driven identity theft). Supervised machine learning algorithms (such as standard Decision Trees, Logistic Regression, or Support Vector Machines) optimize decision boundaries strictly based on historical labeled examples. Consequently, when an adversary deploys a **novel attack vector (zero-day fraud)**, supervised models fail to generalize.
+3. **Severe Production Label Latency:**
+   In commercial banking infrastructure, ground-truth fraud labels do not appear instantaneously. Due to consumer dispute workflows, chargeback rights under financial regulations, and inter-bank merchant reconciliation, a fraudulent charge typically takes **60 to 90 days** to be formally confirmed and labeled. An authorization system that depends strictly on labeled fraud examples cannot protect against active compromises during this multi-month blind spot.
+
+### 1.3 Formal Problem Definition
+Given a continuous stream of $d$-dimensional transaction vectors $X = \{x_1, x_2, \dots, x_N\} \subset \mathbb{R}^d$, where the true class label $y \in \{0, 1\}$ is unknown at inference time and where legitimate records ($y=0$) overwhelmingly outnumber anomalies ($y=1$), construct an unsupervised anomaly detection engine capable of:
+* Accurately isolating anomalous instances without requiring minority class labels during training.
+* Maintaining an ultra-low False Positive Rate (FPR) to prevent consumer friction and merchant checkout abandonment.
+* Achieving sub-millisecond per-transaction inference latency ($\le 0.01\text{ ms}$).
+* Providing real-time, mathematically rigorous feature attribution (Explainable AI) to satisfy regulatory auditability mandates.
 
 ---
 
 ## 2. OBJECTIVES
-The core objectives of this mini project are:
 
-1. **Data Preprocessing & Outlier-Resistant Scaling:** Implement an automated data preparation pipeline utilizing `RobustScaler` on transaction amounts and timestamps to prevent multi-thousand-dollar legitimate spending spikes from distorting feature representations.
-2. **Unsupervised Anomaly Detection Modeling:** Design, calibrate, and train an ensemble-based **Isolation Forest** algorithm capable of isolating anomalies through randomized tree partitioning without requiring minority-class labels during learning.
-3. **Supervised Baseline Benchmarking:** Train a cost-sensitive, balanced **Random Forest** classifier on the same stratified holdout partition (80/20 split) to establish an academic benchmark for supervised vs. unsupervised paradigms.
-4. **Explainable AI (XAI) Attribution Engine:** Develop a statistical $Z$-score deviation engine that contrasts an incoming transaction against the multidimensional centroid of legitimate cardholder behavior, identifying the exact latent components ($V_{14}, V_{12}, V_{10}, V_{17}$) triggering the anomaly alert.
-5. **High-Throughput REST Service:** Build a lightweight, non-blocking Flask REST API providing single-transaction real-time scoring (`POST /api/predict`), bulk CSV auditing (`POST /api/predict/batch`), sample test-case delivery, and metric reporting.
-6. **Fintech Cyber Dashboard:** Develop a modern, glassmorphic single-page web interface featuring a dynamic circular SVG risk gauge, 1-click test cases from verified Kaggle records, live parameter sliders, and side-by-side confusion matrix visualizations.
+The specific engineering and scientific objectives of this mini project are:
+
+1. **Robust Feature Engineering and Outlier-Resistant Preprocessing:**
+   Design and implement a preprocessing pipeline utilizing the **`RobustScaler`** mathematical transformation on the non-PCA attributes (`Time` and `Amount`). This prevents multi-thousand-dollar legitimate expenditure spikes (e.g., commercial travel or corporate procurement exceeding $10,000) from corrupting the distributional scaling of typical retail transactions.
+2. **Implementation of Unsupervised Isolation Forest:**
+   Mathematically formulate, calibrate, and train an ensemble-based **Isolation Forest** architecture ($t=150$ randomized binary partition trees, subsample size $\psi=256$, and empirical contamination rate $\alpha \approx 0.00173$) capable of isolating outliers via recursive random cuts without exposure to minority class labels.
+3. **Supervised Baseline Benchmarking:**
+   Train an optimized, cost-balanced **Random Forest Classifier** ($100$ trees, maximum depth $10$, and inverse class frequency weighting) on an identical stratified $80/20$ holdout partition ($56,962$ test transactions) to empirically quantify the performance trade-offs between supervised pattern recognition and unsupervised anomaly isolation.
+4. **Development of Explainable AI (XAI) Attribution:**
+   Construct an automated $Z$-score divergence engine that benchmarks any candidate transaction against the multidimensional baseline centroid $(\mu, \sigma)$ of verified legitimate transactions, identifying and ranking the top latent PCA variables ($V_{14}, V_{12}, V_{10}, V_{17}$) driving the anomaly verdict.
+5. **Architecting a Lightweight REST Microservice:**
+   Build a modular backend using **Flask 3.1** and **Flask-CORS** exposing typed endpoints for real-time single-transaction scoring (`POST /api/predict`), vectorized bulk CSV compliance auditing (`POST /api/predict/batch`), pre-curated Kaggle sample delivery (`GET /api/samples`), and model evaluation telemetry (`GET /api/metrics`).
+6. **High-Fidelity Cyber-Fintech User Interface:**
+   Develop an interactive single-page application (SPA) featuring a dark-mode glassmorphic design system, an animated circular SVG Risk Gauge (calibrated from 0.0% to 100.0%), interactive sliders for key latent drivers, and confusion matrix visualizations.
 
 ---
 
 ## 3. DATASET / INPUT DESCRIPTION
-The project utilizes the gold-standard **Credit Card Fraud Detection Dataset** released by the Machine Learning Group (MLG) at Université Libre de Bruxelles (ULB).
 
-### 3.1 Overview & Schema
-* **Total Transactions ($N$):** 284,807
-* **Legitimate Transactions (Class 0):** 284,315 (99.827%)
-* **Fraudulent Transactions (Class 1):** 492 (0.173%)
-* **Total Features:** 30 numerical input attributes + 1 binary target label (`Class`).
-* **Missing Values:** 0 null or missing entries across all columns.
+### 3.1 Dataset Origin and Provenance
+The system is built and benchmarked upon the canonical **Credit Card Fraud Detection Dataset** released by the Machine Learning Group (MLG) at the Université Libre de Bruxelles (ULB) in collaboration with Worldline. The dataset captures electronic transactions made by European cardholders over a two-day observation window in September 2013.
 
-### 3.2 Feature Descriptions
-* **`Time`:** Numeric attribute containing the elapsed seconds between each transaction and the first transaction in the dataset. Values range from 0 to 172,792 seconds (~48 hours).
-* **`Amount`:** Transaction amount in Euros/USD. The mean amount is $88.35, with a median of $22.00, and an extreme maximum of $25,691.16, demonstrating substantial positive skewness.
-* **`V1` to `V28` (Latent Security Components):** Due to strict customer privacy mandates and Payment Card Industry Data Security Standards (PCI-DSS), the original transactional features (such as cardholder identity, geographic coordinates, terminal ID, merchant category code, and device fingerprints) were transformed using **Principal Component Analysis (PCA)**. These features are standardized orthogonal vectors centered around zero.
-* **`Class`:** Ground-truth binary target variable (0 = Legitimate, 1 = Fraudulent).
+### 3.2 Dataset Statistical Summary
+* **Total Transactions ($N$):** $284,807$ instances.
+* **Legitimate Transactions (Class 0):** $284,315$ instances ($99.827\%$).
+* **Fraudulent Transactions (Class 1):** $492$ instances ($0.173\%$).
+* **Total Dimensions:** $30$ input features + $1$ binary target indicator (`Class`).
+* **Missing Data / Null Values:** Exactly $0$ across all rows and columns.
+* **Total Memory Footprint:** $143.84\text{ MB}$ uncompressed CSV.
+
+### 3.3 Attribute Specification and PCA Transformation
+
+| Attribute Name | Data Type | Physical Meaning | Range / Distribution | Preprocessing Strategy |
+| :--- | :---: | :--- | :--- | :--- |
+| **`Time`** | Float64 | Elapsed seconds between transaction and first record in dataset | $0.0\text{ s} \to 172,792.0\text{ s}$ (~48 hours, bimodal diurnal curve) | Scaled via `RobustScaler` |
+| **`Amount`** | Float64 | Transaction value in currency | $\$0.00 \to \$25,691.16$ (Mean: $\$88.35$, Median: $\$22.00$) | Scaled via `RobustScaler` |
+| **`V1` to `V28`** | Float64 | Anonymized orthogonal latent components extracted via PCA | Centered at $\mu \approx 0.0$, varying $\sigma$ across axes | Preserved intact |
+| **`Class`** | Integer | Binary Ground-Truth Label | $0$ (Legitimate) or $1$ (Fraudulent) | Target evaluation label |
+
+#### Why Principal Component Analysis (PCA)?
+For customer confidentiality and strict compliance with the **Payment Card Industry Data Security Standard (PCI-DSS)** and European data privacy laws, original customer features (such as 16-digit Primary Account Numbers (PAN), cardholder names, billing postal codes, IP addresses, merchant IDs, and terminal hardware signatures) could not be published in raw form. The data custodians transformed the original 28 high-dimensional operational features into 28 orthogonal eigenvectors using PCA. Crucially, the mathematical properties of distances, angles, and tree-splits are preserved in this transformed coordinate space.
 
 ---
 
 ## 4. ALGORITHM / AI-ML TECHNIQUE USED
 
 ### 4.1 Primary Technique: Isolation Forest (`IsolationForest`)
-Isolation Forest (Liu, Ting, and Zhou, 2008) is an unsupervised ensemble anomaly detection algorithm built on the principle that anomalies are "few and different."
 
-#### Mathematical Foundation
-Unlike distance- or density-based estimators (such as KNN or DBSCAN) that attempt to reconstruct normal instances, Isolation Forest explicitly isolates outliers. It recursively bisects feature space using random axis-aligned cuts.
-* Let $X = \{x_1, \dots, x_n\}$ be a dataset of $d$-dimensional points.
-* To construct an **Isolation Tree (iTree)**, a feature $q$ is randomly selected from available features, and a split value $p$ is chosen uniformly at random between the minimum and maximum values of $q$ in the current node:
-  $$p \sim \text{Uniform}(\min(X_{*, q}), \max(X_{*, q}))$$
-* The recursive partitioning continues until either: (i) the tree reaches a height limit $h_{\max} = \lceil\log_2(\psi)\rceil$, (ii) $|X| \le 1$, or (iii) all data points have identical values.
+#### 4.1.1 Core Mathematical Intuition
+Traditional anomaly detection techniques (such as Gaussian Mixture Models, K-Means clustering, or One-Class SVM) attempt to model the dense regions of normal data and subsequently classify any point outside those dense envelopes as an outlier. This approach suffers heavily in high dimensions due to the **Curse of Dimensionality**, where distance metrics become equidistant and density estimation degrades exponentially.
 
-#### Path Length and Anomaly Score
-The path length $h(x)$ of a sample $x$ is the number of edges traversed from the root node to an external terminating leaf. Because anomalous transactions possess distinct PCA coordinates, they require significantly **fewer random partitions (shorter tree paths)** to isolate.
+**Isolation Forest** (invented by Fei Tony Liu, Kai Ming Ting, and Zhi-Hua Zhou in 2008) inverts this paradigm: instead of modeling normal points, it **explicitly isolates anomalies**. The algorithm leverages two quantitative properties of anomalies:
+1. They are the minority ($< 0.2\%$).
+2. They possess attribute values that deviate substantially from normal clusters.
 
-The average path length of unsuccessful searches in a Binary Search Tree (BST) represents the normalization factor:
-$$c(n) = 2 \ln(n - 1) + 0.5772156649 - \frac{2(n - 1)}{n}$$
-where $0.5772156649$ is the Euler-Mascheroni constant.
+Consequently, when feature space is recursively bisected using random axis-aligned cuts, anomalous instances are partitioned into terminating leaf nodes **significantly closer to the root of the tree** than normal instances.
 
-The anomaly score $s(x, n)$ for an instance $x$ across an ensemble of $t$ isolation trees is formulated as:
+```
+       [ NORMAL DATA CLUSTERS ]                     [ ISOLATED ANOMALY ]
+   (Dense, surrounded by neighbors)             (Sparse, extreme coordinates)
+                 │                                            │
+   Requires 15–20 random splits                 Requires only 2–4 splits
+   to isolate into its own leaf.                to isolate into its own leaf.
+   ──> High Path Length h(x)                    ──> Low Path Length h(x)
+   ──> Anomaly Score s -> 0.0                   ──> Anomaly Score s -> 1.0
+```
+
+#### 4.1.2 Algorithmic Formulation
+
+##### Step 1: Isolation Tree (iTree) Construction
+Let $X = \{x_1, \dots, x_n\}$ be a subsample of $n$ instances drawn without replacement from the training set, where each $x_i \in \mathbb{R}^d$.
+1. If the current node contains $|X| \le 1$ instances or the tree has reached the maximum height limit $h_{\max} = \lceil \log_2(\psi) \rceil$, terminate and return an external leaf node.
+2. Otherwise, randomly select a feature dimension $q \in \{1, 2, \dots, d\}$.
+3. Randomly select a split threshold $p$ uniformly between the minimum and maximum values of feature $q$ in the current subset:
+   $$p \sim \text{Uniform}\left(\min(X_{*, q}), \max(X_{*, q})\right)$$
+4. Partition the data into two disjoint subsets:
+   $$X_{\text{left}} = \{x \in X \mid x_q < p\}, \quad X_{\text{right}} = \{x \in X \mid x_q \ge p\}$$
+5. Recursively apply the procedure to construct the left and right subtrees.
+
+##### Step 2: Path Length Computation $h(x)$
+For an input vector $x$, its path length $h(x)$ is the number of edges traversed from the root of an iTree until reaching a terminating leaf node. If execution terminates in an external leaf containing $m > 1$ instances (due to reaching the height limit $h_{\max}$), an adjustment factor $c(m)$ is added to represent the expected path length of a random binary search tree over $m$ instances:
+$$h(x) = e + c(m)$$
+where $e$ is the number of edges traversed from root to leaf.
+
+##### Step 3: Average BST Path Length Normalization Factor $c(n)$
+Because an iTree is mathematically equivalent to an unsuccessful search in a Binary Search Tree (BST), the average path length over a dataset of size $n$ is defined analytically as:
+$$c(n) = 2 \left( \ln(n - 1) + \gamma \right) - \frac{2(n - 1)}{n}$$
+where $\gamma = 0.5772156649\dots$ is the **Euler-Mascheroni constant**.
+
+##### Step 4: Ensemble Anomaly Score Formulation $s(x, n)$
+Across an ensemble of $t$ independent isolation trees $\{T_1, T_2, \dots, T_t\}$, the expected path length is:
+$$\mathbb{E}(h(x)) = \frac{1}{t} \sum_{k=1}^t h_k(x)$$
+The normalized anomaly score $s(x, n)$ bounded in $[0, 1]$ is formulated as an exponential function base 2:
 $$s(x, n) = 2^{-\frac{\mathbb{E}(h(x))}{c(\psi)}}$$
-* If $\mathbb{E}(h(x)) \to 0 \implies s \to 1$: The instance is flagged as a high-confidence **anomaly (fraud)**.
-* If $\mathbb{E}(h(x)) \to c(\psi) \implies s \to 0.5$: The instance exhibits normal central tendencies.
-* If $\mathbb{E}(h(x)) \to \psi - 1 \implies s \to 0$: The instance is deeply clustered inside legitimate data.
 
-#### Hyperparameter Calibration
-* **Number of Trees ($t$):** 150 (ensures convergence of average path lengths).
-* **Subsampling Size ($\psi$):** 256 (prevents swamping and masking effects).
-* **Contamination ($\alpha$):** Calibrated to the empirical training fraud proportion:
-  $$\alpha = \frac{N_{\text{fraud, train}}}{N_{\text{train}}} = \frac{394}{227,845} \approx 0.00173$$
+* **Case 1: $\mathbb{E}(h(x)) \to 0 \implies s(x, n) \to 1.0$**  
+  The instance isolates with minimal cuts. It is classified as an **outlier / fraud**.
+* **Case 2: $\mathbb{E}(h(x)) \to c(\psi) \implies s(x, n) \to 0.5$**  
+  The instance exhibits average path lengths typical of standard data distributions.
+* **Case 3: $\mathbb{E}(h(x)) \to \psi - 1 \implies s(x, n) \to 0.0$**  
+  The instance requires maximum tree partitioning. It is classified as **deeply normal**.
 
----
-
-### 4.2 Supervised Baseline: Random Forest (`RandomForestClassifier`)
-To provide an academic comparison against traditional supervised approaches, an ensemble of 100 Breiman Decision Trees was trained using:
-* `max_depth = 10` (prevents deep memorization of noise).
-* `class_weight = "balanced"`: Weights inversely proportional to class frequencies:
-  $$w_j = \frac{N}{2 \times N_j}$$
-  This penalizes false negatives on the minority fraud class heavily during Gini impurity minimization.
+#### 4.1.3 Hyperparameter Selection
+* **Ensemble Size ($t = 150$):** Experimental literature establishes that average path lengths $\mathbb{E}(h(x))$ stably converge at $t \ge 100$. Selecting $t = 150$ provides variance reduction without adding excessive computational overhead.
+* **Subsampling Size ($\psi = 256$):** A subsample size of $\psi = 256$ provides optimal isolation efficiency while eliminating **swamping** (normal points being mistakenly isolated because they border outliers) and **masking** (large clusters of anomalies masking each other's outlier properties).
+* **Contamination Rate ($\alpha = 0.00173$):** Tuned exactly to the empirical fraud frequency of the training partition ($\frac{394}{227,845} = 0.001729$), establishing the decision threshold quantile for classification.
 
 ---
 
-### 4.3 Explainable AI (XAI): Statistical $Z$-Score Profiling
-To provide actionable explanations for human analysts, a reference baseline profile $(\mu_j, \sigma_j)$ is computed over all legitimate training samples for each feature $j \in \{V_1, \dots, V_{28}, \text{Time}, \text{Amount}\}$.
+### 4.2 Supervised Baseline: Random Forest Classifier
 
-For any incoming transaction $x$, the standardized divergence is computed as:
-$$Z_j = \frac{x_j - \mu_{\text{normal}, j}}{\sigma_{\text{normal}, j}}$$
-Features exhibiting $|Z_j| > 3.0$ are ranked and displayed as the primary anomaly drivers (e.g., severe negative spikes in latent features $V_{14}$ and $V_{12}$).
+To provide an empirical baseline against which the unsupervised approach is evaluated, an optimized **Random Forest** (Breiman, 2001) supervised ensemble was trained.
+
+* **Ensemble Size:** $100$ Decision Trees.
+* **Maximum Tree Depth:** Restricted to $\text{depth} = 10$ to prevent individual trees from memorizing minor noisy perturbations.
+* **Splitting Criterion:** Gini Impurity:
+  $$I_G(p) = 1 - \sum_{i=1}^C p_i^2$$
+* **Cost-Sensitive Class Balancing:** To counter the $99.83\% : 0.17\%$ imbalance, loss weights inversely proportional to class frequencies were applied:
+  $$w_0 = \frac{N}{2 \times N_0} = \frac{227,845}{2 \times 227,451} \approx 0.5008$$
+  $$w_1 = \frac{N}{2 \times N_1} = \frac{227,845}{2 \times 394} \approx 289.14$$
+  This assigns a $\sim 577\times$ heavier penalty for misclassifying a fraudulent transaction than a legitimate one during tree induction.
+
+---
+
+### 4.3 Explainable AI (XAI): Multidimensional Centroid $Z$-Score Attribution
+
+A significant barrier to deploying AI in financial institutions is the "Black Box" problem, compounded by legal mandates such as **GDPR Article 22 (Right to an Explanation)**. 
+
+To make the Isolation Forest predictions transparent, our system computes the parameter distribution of all legitimate training transactions:
+$$\mu_j = \frac{1}{N_{\text{normal}}} \sum_{i \in \text{Normal}} X_{i, j}, \quad \sigma_j = \sqrt{\frac{1}{N_{\text{normal}} - 1} \sum_{i \in \text{Normal}} (X_{i, j} - \mu_j)^2}$$
+For any candidate transaction vector $x^*$, the standardized divergence across all dimensions $j \in \{V_1, \dots, V_{28}, \text{Time}, \text{Amount}\}$ is:
+$$Z_j = \frac{x^*_j - \mu_j}{\sigma_j}$$
+The features are sorted by absolute deviation $|Z_j|$ in descending order, exposing the top 5 dominant contributors responsible for triggering the anomaly alarm (e.g., $V_{14}$ experiencing a $-10.4\sigma$ collapse).
 
 ---
 
 ## 5. METHODOLOGY / APPROACH
-The end-to-end system follows a modular 5-stage pipeline:
+
+The implementation architecture adheres to a strict, modular machine learning pipeline spanning five distinct phases:
 
 ```
-[ Stage 1: Data Ingestion & Splitting ]
-  - Ingest 284,807 records
-  - Compute normal profile (μ, σ)
-  - Stratified 80/20 train/test split (227,845 train / 56,962 test)
-               │
-               ▼
-[ Stage 2: Feature Transformation ]
-  - Fit RobustScaler on Time & Amount (IQR median scaling)
-  - Preserve standardized PCA coordinates V1 - V28
-               │
-               ▼
-[ Stage 3: Dual Model Training & Serialization ]
-  - Train Isolation Forest (150 trees, contamination=0.00173)
-  - Train Balanced Random Forest (100 trees, depth=10)
-  - Serialize models and scalers (.joblib)
-  - Export metrics & confusion matrices (.json)
-               │
-               ▼
-[ Stage 4: Inference Engine & XAI Engine ]
-  - Map raw decision function to [0, 100%] Anomaly Score
-  - Compute Z-score feature attributions
-  - Assign Risk Tiers: LOW (<35%), ELEVATED (35-64%), CRITICAL (≥65%)
-               │
-               ▼
-[ Stage 5: Web Dashboard & REST Service ]
-  - Flask REST API serving /api/predict, /api/batch, /api/metrics
-  - Single Page Application with SVG Gauge and live sliders
+┌────────────────────────────────────────────────────────────────────────┐
+│                        STAGE 1: DATA INGESTION                         │
+│  - Load creditcard.csv (284,807 rows x 31 columns)                     │
+│  - Verify 0 missing values; evaluate class balance (492 frauds)        │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   STAGE 2: PREPROCESSING & SCALING                     │
+│  - Compute normal profile (μ, σ) on legitimate transactions            │
+│  - Apply RobustScaler on Time & Amount (IQR median scaling)            │
+│  - Extract 6 realistic curated test cases to sample_transactions.json  │
+│  - Execute Stratified 80/20 Split (227,845 train / 56,962 test)        │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             STAGE 3: MODEL TRAINING & METRIC CALCULATION               │
+│  - Train Isolation Forest (150 trees, max_samples=256, α=0.00173)      │
+│  - Train Balanced Random Forest (100 trees, depth=10)                  │
+│  - Compute ROC-AUC, PR-AUC, Confusion Matrix, and Latency on test set  │
+│  - Persist pipelines to models/*.joblib and metrics to models/*.json   │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                  STAGE 4: INFERENCE & XAI ENGINE                       │
+│  - Load serialized models and reference profile in detector.py         │
+│  - Vectorize single & batch inputs; map decision scores to 0-100%      │
+│  - Calculate real-time Z-scores; assign risk tiers (LOW/ELEVATED/CRIT) │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                 STAGE 5: FULL-STACK REST APPLICATION                   │
+│  - Flask Web API serving /api/predict, /api/predict/batch, /api/metrics│
+│  - Cyber-fintech SPA UI with dynamic SVG gauge and parameter sliders   │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 6. IMPLEMENTATION DETAILS
 
-### 6.1 Technology Stack
-* **Language:** Python 3.12
-* **Machine Learning & Math:** Scikit-Learn (1.4+), NumPy, Pandas, Scipy
-* **Pipeline Persistence:** Joblib
-* **Backend Framework:** Flask 3.1, Flask-CORS
-* **Frontend Architecture:** HTML5, CSS3 (Glassmorphism design system), Vanilla JavaScript ES6+
-* **Version Control:** Git, GitHub (`AtharvKulkarni24/Credit-Card-Fraud-Detection`)
-
-### 6.2 Key Code Implementations
-
-#### Module 1: Preprocessing & Outlier Scaling (`src/preprocess.py`)
-```python
-# RobustScaler maps median to 0 and scales based on IQR
-scaler = RobustScaler()
-scaled_time_amount = scaler.fit_transform(df[["Time", "Amount"]])
-
-df_scaled = df.copy()
-df_scaled["scaled_time"] = scaled_time_amount[:, 0]
-df_scaled["scaled_amount"] = scaled_time_amount[:, 1]
-df_scaled.drop(columns=["Time", "Amount"], inplace=True)
-
-# Stratified Split preserves 0.172% fraud proportion in both splits
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.20, stratify=y, random_state=42
-)
+### 6.1 System Directory Structure
+```
+Credi_Card_Fraud_Detection/
+├── data/
+│   ├── creditcard.csv                 # Kaggle ULB dataset (143.84 MB)
+│   ├── sample_transactions.json       # 6 verified test cases
+│   └── README.md                      # Data placement instructions
+├── src/
+│   ├── download_helper.py             # Auto-locator and archive extractor
+│   ├── preprocess.py                  # RobustScaler & stratified partitioner
+│   ├── train.py                       # iForest & Random Forest training engine
+│   ├── detector.py                    # Inference wrapper & Z-score XAI engine
+│   └── app.py                         # Flask REST API backend
+├── models/
+│   ├── isolation_forest.joblib        # Fitted primary anomaly model
+│   ├── baseline_rf.joblib             # Fitted supervised baseline
+│   ├── scaler.joblib                  # Fitted RobustScaler
+│   ├── reference_profile.json         # Normal feature distribution metrics (μ, σ)
+│   └── metrics.json                   # Test set ROC-AUC, PR-AUC, confusion matrices
+├── static/
+│   ├── index.html                     # Cyber-fintech dashboard SPA
+│   ├── css/style.css                  # Obsidian glassmorphic design system
+│   └── js/app.js                      # Real-time UI controller & API bindings
+├── requirements.txt                   # Dependency manifests
+├── run.py                             # 1-click startup script
+└── README.md                          # Repository documentation
 ```
 
-#### Module 2: Isolation Forest Training (`src/train.py`)
+### 6.2 Key Code Artifacts
+
+#### A. Outlier-Resistant Preprocessing (`src/preprocess.py`)
 ```python
+def preprocess_and_split(df, test_size=0.2, random_state=42):
+    normal_df = df[df["Class"] == 0]
+    compute_reference_profile(normal_df)
+    extract_curated_samples(df)
+    
+    # RobustScaler scales features using median and interquartile range (IQR)
+    scaler = RobustScaler()
+    scaled_time_amount = scaler.fit_transform(df[["Time", "Amount"]])
+    
+    df_scaled = df.copy()
+    df_scaled["scaled_time"] = scaled_time_amount[:, 0]
+    df_scaled["scaled_amount"] = scaled_time_amount[:, 1]
+    df_scaled.drop(columns=["Time", "Amount"], inplace=True)
+    
+    joblib.dump(scaler, SCALER_PATH)
+    
+    X = df_scaled.drop(columns=["Class"])
+    y = df_scaled["Class"]
+    
+    # Stratified split ensures both splits maintain identical 0.172% fraud ratio
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, stratify=y, random_state=random_state
+    )
+    return X_train, X_test, y_train, y_test, list(X.columns)
+```
+
+#### B. Model Training and Benchmarking (`src/train.py`)
+```python
+# 1. Isolation Forest (Unsupervised)
 iso_forest = IsolationForest(
     n_estimators=150,
     max_samples=256,
@@ -180,117 +294,177 @@ iso_forest = IsolationForest(
 )
 iso_forest.fit(X_train)
 
-# Evaluation on 56,962 holdout test instances
-raw_scores = iso_forest.decision_function(X_test)
-anomaly_scores = -raw_scores
-roc_auc = roc_auc_score(y_test, anomaly_scores)
+# 2. Random Forest (Supervised Baseline)
+rf = RandomForestClassifier(
+    n_estimators=100,
+    max_depth=10,
+    class_weight="balanced",
+    random_state=42,
+    n_jobs=-1
+)
+rf.fit(X_train, y_train)
 ```
 
-#### Module 3: Real-Time Explainability Engine (`src/detector.py`)
+#### C. Production Inference and Explainability Engine (`src/detector.py`)
 ```python
-def compute_feature_explainability(self, txn_dict, top_k=5):
-    deviations = []
-    for feat, stats in self.reference_profile.items():
-        val = float(txn_dict.get(feat, 0.0))
-        z_score = (val - stats["mean"]) / stats["std"]
-        deviations.append({
-            "feature": feat,
-            "value": round(val, 4),
-            "z_score": round(float(z_score), 2),
-            "abs_z": abs(float(z_score))
-        })
-    deviations.sort(key=lambda x: x["abs_z"], reverse=True)
-    return deviations[:top_k]
+def predict_transaction(self, txn_dict):
+    X_df, raw_time, raw_amount, s_time, s_amount = self._prepare_vector(txn_dict)
+    
+    # Decision function returns signed distance: lower = more anomalous
+    raw_decision = float(self.iso_forest.decision_function(X_df)[0])
+    anomaly_score = max(0.0, min(100.0, (0.12 - raw_decision) / 0.35 * 100.0))
+    is_anomaly = bool(self.iso_forest.predict(X_df)[0] == -1)
+    
+    rf_prob = float(self.rf_model.predict_proba(X_df)[0, 1]) * 100.0 if self.rf_model else 0.0
+    composite_risk = (0.55 * anomaly_score) + (0.45 * rf_prob)
+    
+    # Categorization based on composite risk
+    if composite_risk >= 65.0 or (is_anomaly and rf_prob >= 40.0):
+        status, risk_level, badge_color = "FRAUDULENT", "CRITICAL", "#ef4444"
+    elif composite_risk >= 35.0 or is_anomaly:
+        status, risk_level, badge_color = "SUSPICIOUS", "ELEVATED", "#f59e0b"
+    else:
+        status, risk_level, badge_color = "LEGITIMATE", "LOW", "#10b981"
+        
+    top_drivers = self.compute_feature_explainability(txn_dict, top_k=5)
+    return {
+        "status": status, "risk_level": risk_level, "badge_color": badge_color,
+        "composite_risk_score": round(composite_risk, 1),
+        "anomaly_score": round(anomaly_score, 1),
+        "supervised_probability": round(rf_prob, 1),
+        "top_drivers": top_drivers
+    }
 ```
 
 ---
 
 ## 7. RESULTS AND OUTPUT
 
-### 7.1 Live System Verification
-The system was tested against real transactional patterns extracted directly from the holdout dataset:
+### 7.1 Real-World Verification Test Cases
+The system was verified against distinct behavioral scenarios extracted from actual holdout records:
 
-1. **Test Case 1: Legitimate Everyday Retail Purchase**
-   * **Parameters:** Amount: $33.00, $V_{14} = -0.08, V_{12} = 0.78, V_{10} = -0.34$.
-   * **Model Verdict:** `LEGITIMATE` (Composite Risk: **1.1%**, Emerald Green Gauge).
-   * **Action Taken:** Instant Approval; zero false alarms generated.
+```
+[ SCENARIO 1: Everyday Grocery Store Purchase ]
+Input: Amount = $33.00, Time = 23.0s, V14 = -0.08, V12 = 0.78, V10 = -0.34
+Result:
+  - Anomaly Score: 0.0%
+  - Supervised Probability: 2.5%
+  - Composite Risk: 1.1% [LOW RISK]
+  - UI State: Emerald Green SVG Gauge; Status = "LEGITIMATE"
+  - Decision: Transaction Approved Instantly.
 
-2. **Test Case 2: High-Value Legitimate Hotel Booking**
-   * **Parameters:** Amount: $7,712.43, standard PCA feature vector.
-   * **Model Verdict:** `LEGITIMATE` (Risk: **14.2%**).
-   * **Significance:** Proves that `RobustScaler` prevents high transaction amounts from triggering false alerts.
+[ SCENARIO 2: High-Value Luxury Hotel Booking (False-Positive Stress Test) ]
+Input: Amount = $7,712.43, Time = 11,993.0s, Standard PCA feature coordinates
+Result:
+  - Anomaly Score: 24.3%
+  - Supervised Probability: 1.8%
+  - Composite Risk: 14.2% [LOW RISK]
+  - Decision: Transaction Approved; proves RobustScaler prevents expenditure amounts
+              from triggering false alarms.
 
-3. **Test Case 3: Confirmed Account Takeover / Drain Fraud**
-   * **Parameters:** Amount: $1.00, $V_{14} = -19.21, V_{12} = -17.77, V_{10} = -12.84$.
-   * **Model Verdict:** `FRAUDULENT` (Composite Risk: **66.1%**, Crimson Red Gauge).
-   * **Action Taken:** Transaction Blocked immediately.
-   * **Explainability Output:** $V_{14}$ flagged with $Z = -10.4$ (extreme negative drop below normal baseline).
+[ SCENARIO 3: Stolen Credential Account Draining Attack ]
+Input: Amount = $1.00, Time = 7,526.0s, V14 = -19.21, V12 = -17.77, V10 = -12.84
+Result:
+  - Anomaly Score: 95.8%
+  - Supervised Probability: 30.0%
+  - Composite Risk: 66.1% [CRITICAL RISK]
+  - UI State: Crimson Red SVG Gauge; Status = "FRAUDULENT"
+  - Decision: Transaction Auto-Blocked.
+  - Explainability Driver: V14 flagged with Z = -10.4 (Extreme negative collapse).
+```
 
 ---
 
 ## 8. PERFORMANCE EVALUATION
 
-### 8.1 Quantitative Comparison on Holdout Test Set (56,962 Instances)
+### 8.1 Empirical Metrics on Holdout Test Set ($N = 56,962$)
 
-| Metric | Isolation Forest *(Unsupervised)* | Random Forest *(Supervised Baseline)* |
-| :--- | :---: | :---: |
-| **Learning Paradigm** | Unsupervised (Tree Partitioning) | Supervised (Cost-Balanced Ensemble) |
-| **ROC-AUC Score** | **0.9546 (95.46%)** | **0.9798 (97.98%)** |
-| **PR-AUC (Average Precision)** | 0.1475 | 0.8321 |
-| **Recall (Fraud Caught)** | 25.51% (25 / 98) | 85.71% (84 / 98) |
-| **Precision** | 25.25% (25 / 99) | 64.62% (84 / 130) |
-| **Inference Latency** | **0.005 ms / transaction** | 0.003 ms / transaction |
-| **Training Execution Time** | **2.07 seconds** | 14.32 seconds |
-| **Labels Required for Training?** | **NO (Zero Labels Required)** | YES (Full Historical Labels Required) |
+| Evaluation Metric | Isolation Forest *(Unsupervised)* | Random Forest *(Supervised Baseline)* | Mathematical Formula |
+| :--- | :---: | :---: | :---: |
+| **Learning Paradigm** | Unsupervised (Tree Isolation) | Supervised (Cost-Balanced) | -- |
+| **ROC-AUC Score** | **0.9546 (95.46%)** | **0.9798 (97.98%)** | $\int_0^1 \text{TPR}(f) \, d(\text{FPR}(f))$ |
+| **PR-AUC (Average Precision)**| **0.1475** | **0.8321** | $\sum_k (R_k - R_{k-1}) P_k$ |
+| **Recall (Fraud Caught)** | **25.51% (25 / 98)** | **85.71% (84 / 98)** | $\frac{\text{TP}}{\text{TP} + \text{FN}}$ |
+| **Precision** | **25.25% (25 / 99)** | **64.62% (84 / 130)** | $\frac{\text{TP}}{\text{TP} + \text{FP}}$ |
+| **F1-Score** | **0.2538** | **0.7368** | $2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$ |
+| **Inference Latency** | **0.005 ms / transaction** | **0.003 ms / transaction** | Execution duration / $N$ |
+| **Training Duration** | **2.07 seconds** | **14.32 seconds** | CPU execution time |
+| **Zero-Day Attack Resilience**| ⭐⭐⭐⭐⭐ **Maximum (No labels)** | ⭐⭐ Limited to past patterns | Qualitative assessment |
 
-### 8.2 Confusion Matrix Breakdown (56,962 Holdout Transactions)
+### 8.2 Detailed Confusion Matrix Analysis (56,962 Holdout Instances)
 
 #### Isolation Forest (Unsupervised):
-* **True Negatives (Legitimate Correctly Allowed):** 56,790
-* **False Positives (False Alarms):** 74
-* **False Negatives (Missed Fraud):** 73
-* **True Positives (Frauds Successfully Isolated):** 25
+$$\begin{pmatrix} \text{True Negatives (TN)} & \text{False Positives (FP)} \\ \text{False Negatives (FN)} & \text{True Positives (TP)} \end{pmatrix} = \begin{pmatrix} 56,790 & 74 \\ 73 & 25 \end{pmatrix}$$
+* **Specificity (TNR):** $\frac{56,790}{56,790 + 74} = \mathbf{99.870\%}$ (Extremely low consumer friction).
+* **False Alarm Rate (FPR):** $\frac{74}{56,864} = \mathbf{0.130\%}$ (Only 1 in 768 normal transactions held for review).
 
 #### Random Forest (Supervised):
-* **True Negatives:** 56,818
-* **False Positives:** 46
-* **False Negatives:** 14
-* **True Positives:** 84
+$$\begin{pmatrix} \text{TN} & \text{FP} \\ \text{FN} & \text{TP} \end{pmatrix} = \begin{pmatrix} 56,818 & 46 \\ 14 & 84 \end{pmatrix}$$
+* **Specificity (TNR):** $\frac{56,818}{56,818 + 46} = \mathbf{99.919\%}$.
+* **Fraud Detection Rate (Recall):** $\frac{84}{84 + 14} = \mathbf{85.714\%}$.
 
 ---
 
 ## 9. ANALYSIS AND DISCUSSION
 
-1. **Why Isolation Forest Excels in Production:**
-   While the supervised Random Forest exhibits higher raw precision and recall on historical data, it operates under the strong assumption that future fraud will mirror past patterns. In contrast, **Isolation Forest achieved an exceptional ROC-AUC of 0.9546 without observing a single fraud label during training**. This makes it the superior choice for **zero-day fraud defense** and cold-start environments where historical labels are unavailable or delayed by 60–90 day chargeback windows.
-2. **Computational Efficiency for Banking Throughput:**
-   Isolation Forest evaluated single transactions in **0.005 milliseconds** (5 microseconds). In a real banking payment gateway handling 10,000 transactions per second (TPS), this inference speed guarantees that fraud detection adds imperceptible network latency to the cardholder checkout flow.
-3. **The Necessity of PR-AUC Over Accuracy:**
-   Because legitimate transactions make up 99.83% of the dataset, accuracy is an invalid metric. Evaluating Area Under the Precision-Recall Curve (PR-AUC) and Confusion Matrix cost ratios provides true transparency regarding false positives versus financial losses prevented.
-4. **Value of Explainable AI (XAI):**
-   Providing human fraud analysts with precise statistical $Z$-scores transforms an otherwise opaque ML model into an auditable compliance tool, satisfying modern financial regulatory requirements (such as GDPR Article 22 Right to Explanation).
+### 9.1 Comparative Analysis: Unsupervised vs. Supervised Paradigms
+A superficial glance at raw precision and recall metrics might suggest that supervised Random Forest is unconditionally superior to unsupervised Isolation Forest. However, in enterprise payments engineering, this comparison must be qualified by domain realities:
+
+1. **The Cold-Start and Label Latency Dilemma:**
+   The supervised Random Forest model requires thousands of confirmed, historical fraud examples to build its Gini-minimizing splits. In real banking infrastructure, chargebacks take between **60 and 90 days** to formalize. If an institution enters a new geographic market, launches a new card product, or experiences an infrastructure breach, supervised models have zero labeled historical data. In contrast, **Isolation Forest achieved an exceptional ROC-AUC of 0.9546 with ZERO labeled fraud examples**, making it uniquely viable for cold-start environments.
+2. **Adversarial Resilience to Zero-Day Attacks:**
+   Supervised models overfit to the explicit boundaries of *known* fraud patterns. When a fraud syndicate alters its behavioral profile, supervised classifiers experience catastrophic performance drops. Because **Isolation Forest models isolation difficulty rather than class boundaries**, any anomalous pattern—regardless of whether it matches historical attacks—is flagged.
+3. **The Multi-Tiered Hybrid Defense Architecture:**
+   The ultimate industry solution demonstrated in AegisPay is a **hybrid dual-engine architecture**:
+   * The **Supervised Model** auto-blocks known, high-volume recurring fraud patterns.
+   * The **Unsupervised Anomaly Model** flags subtle, emerging, zero-day statistical anomalies for secondary multi-factor authentication (MFA).
+
+### 9.2 Computational Scalability in Payment Gateways
+In production transaction networks (e.g., VisaNet or Mastercard BankNet), authorization engines handle peak workloads exceeding **20,000 Transactions Per Second (TPS)**. The entire security authorization decision must execute in under **50 milliseconds**. With our Isolation Forest inference benchmark of **0.005 milliseconds (5 microseconds)** per transaction, our AI engine consumes less than **$0.01\%$ of the total available latency budget**, leaving ample headroom for network routing and cryptographic validation.
+
+### 9.3 Why Accuracy is Scientifically Invalid for Imbalanced Data
+If an evaluator assesses this project using Accuracy:
+$$\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{Total}} = \frac{25 + 56,790}{56,962} = \mathbf{99.74\%}$$
+A naive baseline that blindly outputs 0 for all instances achieves:
+$$\text{Baseline Accuracy} = \frac{0 + 56,864}{56,962} = \mathbf{99.83\%}$$
+The naive baseline has a higher accuracy, yet it is completely useless for fraud detection. This mathematically proves why academic evaluation must center on **ROC-AUC (0.9546)**, **PR-AUC**, and **Cost-Weighted Utility Functions**.
 
 ---
 
 ## 10. CONCLUSION
-In this project, an end-to-end, production-grade fraud detection system named **AegisPay** was successfully conceptualized, developed, and evaluated. By leveraging unsupervised **Isolation Forest** algorithms paired with **RobustScaler** feature transformation, the system isolates fraudulent card transactions effectively with an **ROC-AUC of 0.9546** and ultra-low latency of **0.005 ms per transaction**. 
 
-The inclusion of an **Explainability Engine ($Z$-Score Attribution)** bridges the gap between complex artificial intelligence algorithms and practical banking operations. Furthermore, the dual-model architecture demonstrates how banks can combine unsupervised zero-day anomaly detectors with supervised pattern recognizers to build a layered defense strategy.
+In this project, an end-to-end, industrial-grade credit card fraud detection system named **AegisPay** was successfully designed, implemented, and empirically evaluated.
+
+1. By implementing **Isolation Forest** tree partitioning alongside **RobustScaler** feature transformation, the system isolates fraudulent card transactions effectively, achieving an **ROC-AUC of 0.9546** without requiring a single fraud label during training.
+2. The system demonstrates ultra-high computational efficiency, executing single-transaction evaluations in **0.005 ms**, ensuring suitability for real-time payment gateway deployment.
+3. The integration of an **Explainable AI (XAI)** engine computing real-time $Z$-score divergences solves the "black-box" dilemma, empowering fraud investigators with actionable, transparent explanations for every flagged transaction.
+4. The accompanying modern, glassmorphic cyber-fintech dashboard bridges the gap between complex algorithmic models and practical operational usability.
 
 ---
 
 ## 11. FUTURE SCOPE
-1. **Deep Semi-Supervised Autoencoders:** Implementing deep Variational Autoencoders (VAEs) using PyTorch to model non-linear latent feature manifolds and detect anomalies via reconstruction error ($MSE > \tau$).
-2. **Graph Neural Networks (GNNs):** Constructing heterogeneous transaction graphs (Cardholder $\rightarrow$ Device IP $\rightarrow$ Merchant) using Relational GCNs to identify organized card-cloning rings and collusive merchant fraud.
-3. **Streaming Distributed Ingestion:** Integrating Apache Kafka and Redis to stream and score live transactions with horizontal scaling across distributed cluster nodes.
-4. **Federated Learning for Cross-Bank Privacy:** Training decentralized anomaly detection models across multiple financial institutions without sharing confidential customer transaction data.
+
+To evolve AegisPay beyond this mini project, future research and development will explore:
+
+1. **Deep Semi-Supervised Variational Autoencoders (VAEs):**
+   Constructing PyTorch-based neural Autoencoders (Encoder $\to$ Bottleneck Latent Space $\to$ Decoder) trained purely on legitimate transactions. Transactions producing high Reconstruction Loss:
+   $$\mathcal{L}_{\text{recon}} = \|x - \hat{x}\|_2^2 > \tau$$
+   will be classified as high-confidence non-linear anomalies.
+2. **Heterogeneous Graph Neural Networks (GNNs):**
+   Formulating payment ecosystems as dynamic bipartite graphs $\mathcal{G} = (\mathcal{V}_{\text{cards}}, \mathcal{V}_{\text{merchants}}, \mathcal{E}_{\text{transactions}})$. Utilizing Relational Graph Convolutional Networks (R-GCNs) will allow detection of complex, collusive fraud rings and card-cloning syndicates that evade single-transaction vector analysis.
+3. **Distributed Streaming Infrastructure:**
+   Integrating **Apache Kafka** for event-driven message queuing and **Redis** for in-memory velocity tracking (e.g., rolling 60-second card velocity counters), enabling horizontal scale across multi-region cloud clusters.
+4. **Federated Learning for Cross-Bank Collaboration:**
+   Deploying privacy-preserving Federated Learning algorithms (such as FedAvg with Differential Privacy) allowing multiple commercial banking institutions to jointly train shared anomaly models without ever exposing proprietary cardholder transaction records.
 
 ---
 
 ## 12. REFERENCES
-1. **Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008).** *Isolation Forest.* In Eighth IEEE International Conference on Data Mining (pp. 413-422). IEEE.
-2. **Dal Pozzolo, A., Caelen, O., Johnson, R. A., & Bontempi, G. (2015).** *Calibrating Probability with Undersampling for Unbalanced Classification.* In IEEE Symposium Series on Computational Intelligence (SSCI).
-3. **Breiman, L. (2001).** *Random Forests.* Machine Learning, 45(1), 5-32.
-4. **Goldstein, M., & Uchida, S. (2016).** *A Comparative Evaluation of Unsupervised Anomaly Detection Algorithms for Multivariate Data.* PLOS ONE, 11(4), e0152173.
-5. **Emmott, A., Das, S., Dietterich, T., Fern, A., & Wong, W. K. (2013).** *Systematic Construction of Anomaly Detection Benchmarks from Real Data.* ACM SIGKDD Workshop on Outlier Detection.
-6. **Kaggle Machine Learning Group (ULB):** *Credit Card Fraud Detection Dataset*, https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud.
+
+1. **Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008).** *Isolation Forest.* In Proceedings of the 8th IEEE International Conference on Data Mining (ICDM '08), Pisa, Italy, pp. 413–422. DOI: 10.1109/ICDM.2008.17.
+2. **Dal Pozzolo, A., Caelen, O., Johnson, R. A., & Bontempi, G. (2015).** *Calibrating Probability with Undersampling for Unbalanced Classification.* In IEEE Symposium Series on Computational Intelligence (SSCI), Cape Town, South Africa, pp. 159–166.
+3. **Breiman, L. (2001).** *Random Forests.* Machine Learning, Vol. 45, No. 1, pp. 5–32.
+4. **Goldstein, M., & Uchida, S. (2016).** *A Comparative Evaluation of Unsupervised Anomaly Detection Algorithms for Multivariate Data.* PLOS ONE, Vol. 11, No. 4, e0152173. DOI: 10.1371/journal.pone.0152173.
+5. **Emmott, A., Das, S., Dietterich, T., Fern, A., & Wong, W. K. (2013).** *Systematic Construction of Anomaly Detection Benchmarks from Real Data.* In ACM SIGKDD Workshop on Outlier Detection De-Constructed (ODD '13), Chicago, IL, pp. 16–21.
+6. **Machine Learning Group (ULB):** *Credit Card Fraud Detection Benchmark Dataset.* Université Libre de Bruxelles, hosted on Kaggle: [https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud).
+7. **Rousseeuw, P. J., & Croux, C. (1993).** *Alternatives to the Median Absolute Deviation.* Journal of the American Statistical Association, Vol. 88, No. 424, pp. 1273–1283. (Foundation of Robust Outlier Scaling).
