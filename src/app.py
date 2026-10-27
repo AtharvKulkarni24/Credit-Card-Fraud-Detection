@@ -126,6 +126,18 @@ def export_batch_csv():
     )
 
 
+@app.route("/api/sample-batch/download", methods=["GET"])
+def download_sample_batch():
+    """Provides a sample 100-transaction CSV file for instant batch testing."""
+    sample_path = BASE_DIR / "test_batch_sample.csv"
+    return send_file(
+        str(sample_path),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="test_batch_sample.csv"
+    )
+
+
 if __name__ == "__main__":
     print("\n" + "="*60)
     print(">> AegisPay Fraud Detection Engine & Dashboard Online!")
